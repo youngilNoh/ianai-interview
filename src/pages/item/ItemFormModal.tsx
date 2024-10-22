@@ -16,6 +16,8 @@ import { Item } from "../../models/item";
 import { ItemService } from "../../services/item";
 import { showCheckCloseModal } from "../../utils/modals";
 import { showErrorNotification, showSuccessNotification } from "../../utils/notifications";
+import { useDisclosure } from "@mantine/hooks";
+import { ItemDeleteModal } from "./ItemDeleteModal";
 
 const initialValues: Partial<Item> = {
     id: undefined,
@@ -34,6 +36,8 @@ interface ItemFormModalProps {
 }
 
 export function ItemFormModal({ opened, close, item }: ItemFormModalProps) {
+    const [openedDeleteModal, { open: openDeleteModal, close: closeDeleteModal }] = useDisclosure(false);
+
     const queryClient = useQueryClient();
     const form = useForm<Partial<Item>>({
         mode: 'uncontrolled',
@@ -133,9 +137,12 @@ export function ItemFormModal({ opened, close, item }: ItemFormModalProps) {
                     />
                     <Group justify="end">
                         {isEdit && (
-                            <Button mt="sm" bg="red" flex={1} onClick={onDelete}>
-                                <Text>삭제</Text>
-                            </Button>
+                            <>
+                                <Button mt="sm" bg="red" flex={1} onClick={openDeleteModal}>
+                                    <Text>삭제</Text>
+                                </Button>
+                                <ItemDeleteModal opened={openedDeleteModal} close={closeDeleteModal} onDelete={onDelete} itemName={form.getValues().name || ''} />
+                            </>
                         )}
                         <Button type="submit" mt="sm" flex={1}>
                             <Text>{isEdit ? "수정" : "저장"}</Text>

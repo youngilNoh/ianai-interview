@@ -1,7 +1,7 @@
-import { Button, Group, Title } from "@mantine/core";
+import { Box, Button, Group, Switch, Title } from "@mantine/core";
 import { useQuery } from "@tanstack/react-query";
 import { DataTable } from "mantine-datatable";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { Entity } from "../../constants/entity";
 import { Item } from "../../models/item";
 import { ItemService } from "../../services/item";
@@ -12,6 +12,9 @@ interface ItemTableProps {
 }
 
 export function ItemTable({ openForm, onClickRow }: ItemTableProps) {
+    const [records, setRecords] = useState<Item[]>([]);
+    const [filter, setFilter] = useState<boolean>(false);
+
     const { data, isFetching } = useQuery({
         queryKey: [Entity.Item],
         queryFn: ItemService.getItemList,
@@ -19,19 +22,29 @@ export function ItemTable({ openForm, onClickRow }: ItemTableProps) {
 
     useEffect(() => {
         if (data) {
-            setRecords(data);
+            const filteredData = filter ? data.filter((item: Item) => item.price > 0) : data;
+            setRecords(filteredData);
         }
-    }, [data]);
+    }, [data, filter]);
 
-    const [records, setRecords] = useState<Item[]>([]);
+    const onClickFilter = (event: ChangeEvent<HTMLInputElement>) =>
+        setFilter(event.currentTarget.checked);
+
 
     return (
         <>
             <Group justify="space-between">
                 <Title order={3}>{"아이템"}</Title>
-                <Button onClick={openForm}>
-                    추가
-                </Button>
+                <Group justify="space-between">
+                    <Button onClick={openForm}>
+                        추가
+                    </Button>
+                    <Switch
+                        checked={filter}
+                        onChange={onClickFilter}
+                        label="필터"
+                    />
+                </Group>
             </Group>
             <DataTable
                 fetching={isFetching}
@@ -47,6 +60,11 @@ export function ItemTable({ openForm, onClickRow }: ItemTableProps) {
                     {
                         accessor: "name",
                         title: "이름",
+                        render: ({ name, price }) => (
+                            <Box c={price < 0 ? 'red' : 'black'}>
+                                {name}
+                            </Box>
+                        ),
                     },
                     {
                         accessor: "price",
